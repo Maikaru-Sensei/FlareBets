@@ -1,0 +1,36 @@
+# Node.js dependencies
+node_modules/
+
+# Hardhat local network files
+hardhat.config.local.js
+
+# Hardhat local storage
+storage/
+
+# Hardhat artifacts
+artifacts/
+
+# Hardhat cache
+cache/
+
+# Hardhat coverage reports
+coverage/
+
+# Solidity compiler artifacts
+*.json
+
+# Solidity build output
+build/
+
+# Solidity coverage reports
+*.lcov
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# macOS files
+.DS_Store
