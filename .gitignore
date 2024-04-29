@@ -34,3 +34,7 @@ build/
 
 # macOS files
 .DS_Store
+
+.env
+
+ignition/deployments/chain-114/
