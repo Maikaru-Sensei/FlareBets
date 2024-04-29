@@ -1,0 +1,44 @@
+.metamask-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.metamask-logo {
+    margin-right: 10px;
+    height: 20px;
+}
+
+/* CSS for list items */
+#betList li {
+    margin-bottom: 20px; /* Add some space between list items */
+    padding: 20px; /* Add padding for better readability */
+    border: 1px solid #ccc; /* Add border for visual separation */
+    border-radius: 5px; /* Add rounded corners for aesthetics */
+    background-color: #f9f9f9; /* Light gray background color */
+}
+
+/* CSS for address (in bold) */
+#betList li .address {
+    font-weight: bold; /* Make the address bold */
+}
+
+/* CSS for state */
+#betList li .state {
+    margin-top: 5px; /* Add some space between address and state */
+}
+
+/* CSS for bets */
+#betList li .bets {
+    margin-top: 5px; /* Add some space between state and bets */
+}
+
+/* CSS for balance */
+#betList li .balance {
+    margin-top: 5px; /* Add some space between bets and balance */
+}

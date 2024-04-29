@@ -14,11 +14,21 @@ contract BitcoinPriceBet {
     bool private bettingClosed;
     string private symbol;
 
+    struct State {
+        bool status;
+        uint bets;
+        uint balance;
+    }
+
     event Winner(address indexed winner, uint256 amount, uint guessedPrice, uint realPrice);
 
     constructor() {
         owner = payable(msg.sender);
         symbol = "testBTC";
+    }
+
+    function getState() public view returns(bool, uint, uint) {
+        return (bettingClosed, participants.length, balance);
     }
 
     function makeBet(uint bet) public payable betsOpen {
