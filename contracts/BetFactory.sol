@@ -22,6 +22,25 @@ contract BetFactory {
         return bitcoinPriceBets;
     }
 
+    function closeBetting(address betAddress) public onlyOwner {
+        require(betAddress != address(0), "Invalid bet address");
+
+        BitcoinPriceBet betInstance = BitcoinPriceBet(betAddress);
+        betInstance.closeBetting();
+    }
+
+    function determineWinner(address betAddress) public onlyOwner {
+        require(betAddress != address(0), "Invalid bet address");
+        BitcoinPriceBet betInstance = BitcoinPriceBet(betAddress);
+        betInstance.determineWinner();
+    }
+
+    function getWinner(address betAddress) view public onlyOwner returns(address, uint, uint) {
+        require(betAddress != address(0), "Invalid bet address");
+        BitcoinPriceBet betInstance = BitcoinPriceBet(betAddress);
+        return betInstance.getWinner();
+    }
+
     modifier onlyOwner {
         require(msg.sender == owner, "You are not the owner");
         _;

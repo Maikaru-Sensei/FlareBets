@@ -13,6 +13,9 @@ contract BitcoinPriceBet {
     uint private balance;
     bool private bettingClosed;
     string private symbol;
+    address private winnerAddress;
+    uint private guessedBitcoinPrice;
+    uint private realBitcoinPrice;
 
     struct State {
         bool status;
@@ -28,7 +31,11 @@ contract BitcoinPriceBet {
     }
 
     function getState() public view returns(bool, uint, uint) {
-        return (bettingClosed, participants.length, balance);
+        return (bettingClosed, participants.length, address(this).balance);
+    }
+
+    function getWinner() public view returns(address, uint, uint) {
+        return (winnerAddress, guessedBitcoinPrice, realBitcoinPrice);
     }
 
     function makeBet(uint bet) public payable betsOpen {
@@ -95,6 +102,9 @@ contract BitcoinPriceBet {
         for (uint256 i = 0; i < winners.length; i++) {
             payable(winners[i]).transfer(winningsPerWinner);
             emit Winner(winners[i], winningsPerWinner, bets[winners[i]], realPrice);
+            winnerAddress = winners[i];
+            guessedBitcoinPrice = bets[winners[i]];
+            realBitcoinPrice = realPrice;
         }
     }
 

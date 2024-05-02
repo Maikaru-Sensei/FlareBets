@@ -1,12 +1,13 @@
 import { ethers } from "./ethers.js";
 
-export const FACTORY_CONTRACT_ADDRESS = '0xD4e4625DAE1CC45BD7517A7e62782D6E6c2FC59b';
-export const RPC_ENDPOINT = 'https://coston2-api.flare.network/ext/bc/C/rpc';
-export const FACTORY_CONTRACT_ABI = [{
-    "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-},
+export const CONTRACT_OWNER = '0x6d16e309185fb98049887fd536f091a6a3cfdc5d';
+export const FACTORY_CONTRACT_ADDRESS = '0x1274e6f47d4126ed5B2D948bB6Dc75F54eEf1609';
+export const FACTORY_CONTRACT_ABI = [
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
     {
         "inputs": [
             {
@@ -27,6 +28,19 @@ export const FACTORY_CONTRACT_ABI = [{
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "betAddress",
+                "type": "address"
+            }
+        ],
+        "name": "closeBetting",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "createNewBet",
         "outputs": [
@@ -40,6 +54,19 @@ export const FACTORY_CONTRACT_ABI = [{
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "betAddress",
+                "type": "address"
+            }
+        ],
+        "name": "determineWinner",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "getAllBets",
         "outputs": [
@@ -47,6 +74,35 @@ export const FACTORY_CONTRACT_ABI = [{
                 "internalType": "address[]",
                 "name": "",
                 "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "betAddress",
+                "type": "address"
+            }
+        ],
+        "name": "getWinner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -140,6 +196,29 @@ export const BET_CONTRACT_ABI = [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "getWinner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -174,7 +253,7 @@ export const BET_CONTRACT_ABI = [
 ];
 
 
-export async function makeNewBet() {
+export async function deployNewBet() {
     if (window.ethereum) {
         await ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -213,8 +292,8 @@ export async function viewBets() {
             const betState = {
                 address: address,
                 state: state[0],
-                bets: state[1].toNumber(),
-                balance: state[2].toNumber(),
+                bets: state[1],
+                balance: ethers.utils.formatEther(state[2]),
             };
             betStates.push(betState);
         } catch (error) {
@@ -222,28 +301,34 @@ export async function viewBets() {
         }
     }
 
-    renderBetStates(betStates);
+    await renderBetStates(provider, signer, betStates);
 }
 
-function renderBetStates(betStates) {
+async function renderBetStates(provider, signer, betStates) {
     const betListElement = document.getElementById("betList");
+    const accounts = await ethereum.request({method: 'eth_requestAccounts'});
+    const account = accounts[0];
 
     betListElement.innerHTML = "";
 
     const list = document.createElement("ul");
 
-    betStates.forEach((state, index) => {
+    for (const state of betStates) {
+        const index = betStates.indexOf(state);
         const listItem = document.createElement("li");
 
         const addressElement = document.createElement("span");
         const stateElement = document.createElement("span");
         const betsElement = document.createElement("span");
         const balanceElement = document.createElement("span");
+        const closeBetElement = document.createElement("button");
+        const makeBetElement = document.createElement("button");
+        const winnerElement = document.createElement("span");
 
         addressElement.innerHTML = `<b>Address:</b> ${state.address}`;
-        stateElement.textContent = `State: ${state.status ? "Open" : "Closed"}`;
+        stateElement.textContent = `State: ${state.state ? "Closed" : "Open"}`;
         betsElement.textContent = `Bets: ${state.bets}`;
-        balanceElement.textContent = `Balance: ${state.balance}`;
+        balanceElement.textContent = `Balance: ${state.balance} C2FLR`;
 
         listItem.appendChild(addressElement);
         listItem.appendChild(document.createElement("br"));
@@ -253,8 +338,61 @@ function renderBetStates(betStates) {
         listItem.appendChild(document.createElement("br"));
         listItem.appendChild(balanceElement);
 
+        if (!state.state && account === CONTRACT_OWNER) {
+            listItem.appendChild(document.createElement("br"));
+            closeBetElement.textContent = 'Close Bet';
+            closeBetElement.onclick = async () => {
+                const factoryContract = new ethers.Contract(FACTORY_CONTRACT_ADDRESS, FACTORY_CONTRACT_ABI, signer);
+
+                const closeBettingTx = await factoryContract.closeBetting(state.address);
+                await closeBettingTx.wait();
+
+                const determineWinnerTx = await factoryContract.determineWinner(state.address);
+                await determineWinnerTx.wait();
+
+                closeBetElement.hidden = true;
+                makeBetElement.hidden = true;
+            };
+            listItem.appendChild(closeBetElement);
+        }
+
+        if (!state.state && account === CONTRACT_OWNER) {
+            listItem.appendChild(document.createElement("br"));
+            makeBetElement.textContent = 'Make Bet';
+            makeBetElement.onclick = async () => {
+                const betContract = new ethers.Contract(state.address, BET_CONTRACT_ABI, signer);
+                const betValue = ethers.utils.parseEther('0.1');
+                const overrides = {
+                    value: betValue
+                };
+
+                betContract.makeBet(123, overrides)
+                    .then((transaction) => {
+                        console.log('Transaction sent:', transaction);
+                        return transaction.wait(); // Wait for the transaction to be mined
+                    })
+                    .then((receipt) => {
+                        console.log('Transaction receipt:', receipt);
+                    })
+                    .catch((error) => {
+                        console.error('Transaction error:', error);
+                    });
+            };
+            listItem.appendChild(makeBetElement);
+        }
+
+        if (state.state) {
+            const factoryContract = new ethers.Contract(FACTORY_CONTRACT_ADDRESS, FACTORY_CONTRACT_ABI, signer);
+            const winnerResult = await factoryContract.getWinner(state.address);
+            winnerElement.textContent = `winner: ${winnerResult[0]}, guessedPrice: ${winnerResult[1]}, realPrice: ${winnerResult[2]}`;
+
+            listItem.appendChild(document.createElement("br"));
+            listItem.appendChild(winnerElement);
+        }
+
+
         list.appendChild(listItem);
-    });
+    }
 
     betListElement.appendChild(list);
 }

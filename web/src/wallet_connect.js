@@ -1,8 +1,8 @@
-import { makeNewBet, viewBets } from './contract.js';
+import { deployNewBet, viewBets } from './contract.js';
 
 if (typeof window.ethereum !== 'undefined') {
     const connectButton = document.getElementById("connectButton");
-    const makeBet = document.getElementById("makeBet");
+    const deployBet = document.getElementById("deployBet");
     const vBets = document.getElementById("viewBets");
     const status = document.getElementById('status');
 
@@ -12,16 +12,14 @@ if (typeof window.ethereum !== 'undefined') {
             const account = accounts[0];
             console.log("Connected to account:", account);
             status.textContent = 'Metamask connected';
-
-            const balance = await ethereum.request({ method: 'eth_getBalance', params: [account, 'latest'] });
-            console.log("Account balance:", balance);
+            connectButton.hidden = true;
         } catch (error) {
             console.error("Error connecting to MetaMask:", error.message);
         }
     });
 
-    makeBet.addEventListener("click", async() => {
-        await makeNewBet();
+    deployBet.addEventListener("click", async() => {
+        await deployNewBet();
     });
 
     vBets.addEventListener("click", async() => {
