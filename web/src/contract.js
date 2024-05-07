@@ -1,7 +1,7 @@
 import { ethers } from "./ethers.js";
 
-export const CONTRACT_OWNER = '0x6d16e309185fb98049887fd536f091a6a3cfdc5d';
-export const FACTORY_CONTRACT_ADDRESS = '0x1274e6f47d4126ed5B2D948bB6Dc75F54eEf1609';
+export const CONTRACT_OWNER = '0xC0B39308d50848788D879D5ebF74d1ca6066C88a';
+export const FACTORY_CONTRACT_ADDRESS = '0x98763bFAB109e3ea873B17520cE0628658053bA7';
 export const FACTORY_CONTRACT_ABI = [
     {
         "inputs": [],
@@ -120,43 +120,13 @@ export const FACTORY_CONTRACT_ABI = [
         ],
         "stateMutability": "view",
         "type": "function"
-    }];
+    }
+];
 export const BET_CONTRACT_ABI = [
     {
         "inputs": [],
         "stateMutability": "nonpayable",
         "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "winner",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "guessedPrice",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "realPrice",
-                "type": "uint256"
-            }
-        ],
-        "name": "Winner",
-        "type": "event"
     },
     {
         "inputs": [],
@@ -278,9 +248,10 @@ export async function deployNewBet() {
 export async function viewBets() {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const factoryContract = new ethers.Contract(FACTORY_CONTRACT_ADDRESS, FACTORY_CONTRACT_ABI, signer);
+    const factoryContract = new ethers.Contract(FACTORY_CONTRACT_ADDRESS, FACTORY_CONTRACT_ABI, provider);
 
     const betAddresses = await factoryContract.getAllBets();
+    console.log(betAddresses);
 
     const betStates = [];
 
@@ -288,6 +259,7 @@ export async function viewBets() {
         try {
             const betContract = new ethers.Contract(address, BET_CONTRACT_ABI, provider);
             const state = await betContract.getState();
+            console.log(state);
 
             const betState = {
                 address: address,
@@ -314,7 +286,6 @@ async function renderBetStates(provider, signer, betStates) {
     const list = document.createElement("ul");
 
     for (const state of betStates) {
-        const index = betStates.indexOf(state);
         const listItem = document.createElement("li");
 
         const addressElement = document.createElement("span");
@@ -322,6 +293,7 @@ async function renderBetStates(provider, signer, betStates) {
         const betsElement = document.createElement("span");
         const balanceElement = document.createElement("span");
         const closeBetElement = document.createElement("button");
+        const makeBetInputElement = document.createElement("input");
         const makeBetElement = document.createElement("button");
         const winnerElement = document.createElement("span");
 
@@ -338,7 +310,7 @@ async function renderBetStates(provider, signer, betStates) {
         listItem.appendChild(document.createElement("br"));
         listItem.appendChild(balanceElement);
 
-        if (!state.state && account === CONTRACT_OWNER) {
+        if (!state.state && account.toLowerCase() === CONTRACT_OWNER.toLowerCase()) {
             listItem.appendChild(document.createElement("br"));
             closeBetElement.textContent = 'Close Bet';
             closeBetElement.onclick = async () => {
@@ -350,23 +322,26 @@ async function renderBetStates(provider, signer, betStates) {
                 const determineWinnerTx = await factoryContract.determineWinner(state.address);
                 await determineWinnerTx.wait();
 
+                console.log(determineWinnerTx.hash);
+
                 closeBetElement.hidden = true;
                 makeBetElement.hidden = true;
             };
             listItem.appendChild(closeBetElement);
         }
 
-        if (!state.state && account === CONTRACT_OWNER) {
+        if (!state.state) {
             listItem.appendChild(document.createElement("br"));
+            listItem.appendChild(makeBetInputElement);
             makeBetElement.textContent = 'Make Bet';
             makeBetElement.onclick = async () => {
                 const betContract = new ethers.Contract(state.address, BET_CONTRACT_ABI, signer);
-                const betValue = ethers.utils.parseEther('0.1');
+                const betValue = ethers.utils.parseEther('2');
                 const overrides = {
                     value: betValue
                 };
 
-                betContract.makeBet(123, overrides)
+                betContract.makeBet(parseInt(makeBetInputElement.value), overrides)
                     .then((transaction) => {
                         console.log('Transaction sent:', transaction);
                         return transaction.wait(); // Wait for the transaction to be mined
@@ -384,7 +359,9 @@ async function renderBetStates(provider, signer, betStates) {
         if (state.state) {
             const factoryContract = new ethers.Contract(FACTORY_CONTRACT_ADDRESS, FACTORY_CONTRACT_ABI, signer);
             const winnerResult = await factoryContract.getWinner(state.address);
-            winnerElement.textContent = `winner: ${winnerResult[0]}, guessedPrice: ${winnerResult[1]}, realPrice: ${winnerResult[2]}`;
+            winnerElement.textContent = `winner: ${winnerResult[0]}, 
+                guessedPrice: ${(winnerResult[1] / 100000).toFixed(5)} USD/BTC, 
+                realPrice: ${(winnerResult[2] / 100000).toFixed(5)} USD/BTC`;
 
             listItem.appendChild(document.createElement("br"));
             listItem.appendChild(winnerElement);

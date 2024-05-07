@@ -17,14 +17,6 @@ contract BitcoinPriceBet {
     uint private guessedBitcoinPrice;
     uint private realBitcoinPrice;
 
-    struct State {
-        bool status;
-        uint bets;
-        uint balance;
-    }
-
-    event Winner(address indexed winner, uint256 amount, uint guessedPrice, uint realPrice);
-
     constructor() {
         owner = payable(msg.sender);
         symbol = "testBTC";
@@ -101,7 +93,6 @@ contract BitcoinPriceBet {
 
         for (uint256 i = 0; i < winners.length; i++) {
             payable(winners[i]).transfer(winningsPerWinner);
-            emit Winner(winners[i], winningsPerWinner, bets[winners[i]], realPrice);
             winnerAddress = winners[i];
             guessedBitcoinPrice = bets[winners[i]];
             realBitcoinPrice = realPrice;
@@ -111,7 +102,7 @@ contract BitcoinPriceBet {
     function getBitcoinPrice(
         string memory _symbol
     ) internal view onlyOwner returns(
-        uint256 _price) 
+        uint256 _price)
     {
         IFlareContractRegistry contractRegistry = IFlareContractRegistry(
             FLARE_CONTRACT_REGISTRY);
@@ -129,7 +120,7 @@ contract BitcoinPriceBet {
     }
 
     modifier onlyOwner {
-        require(msg.sender == owner, "You are not the owner");
+        require(msg.sender == owner, "Instance, You are not the owner");
         _;
     }
 }
