@@ -1,13 +1,12 @@
-# Sample Hardhat Project
+# FlareBets
+Make a bet about the bitcoin price in the future, in the flare/songbird blockchain environment
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
+compile the contract using hardhat
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+npx hardhat compile
+```
+
+deploy the contract to the test network coston2
+```shell
+npx hardhat ignition deploy ignition/modules/BetFactory.js --network coston2
 ```
