@@ -1,7 +1,7 @@
 import { ethers } from "./ethers.js";
 
 export const CONTRACT_OWNER = '0xC0B39308d50848788D879D5ebF74d1ca6066C88a';
-export const FACTORY_CONTRACT_ADDRESS = '0x98763bFAB109e3ea873B17520cE0628658053bA7';
+export const FACTORY_CONTRACT_ADDRESS = '0x9bb3E475586d1DD466FF80e878187De91790e77e';
 export const FACTORY_CONTRACT_ABI = [
     {
         "inputs": [],
